@@ -1,0 +1,13 @@
+{
+    "browserPath":"",
+    "users": {
+        "user1":{
+            "email": "email",
+            "password": "password"
+        },
+        "user2":{
+            "email": "email",
+            "password": "password"
+        }
+    }
+}

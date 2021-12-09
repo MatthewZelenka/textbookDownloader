@@ -1,16 +1,27 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from datetime import datetime
-from datetime import time as dttime
-import time, json, os, sys, re
+import pip
+while True:
+    try:
+        from selenium import webdriver
+        from selenium.webdriver.common.by import By
+        from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+        from selenium.webdriver.support.ui import WebDriverWait
+        from selenium.webdriver.support import expected_conditions as EC
+        from datetime import datetime
+        from datetime import time as dttime
+        import time, json, os, sys, re
+        break
+    except:
+        if (input("Do you wanna install these requests [Y/n]").lower() == ("y" or "")):
+            pip.main(['install', "-r", "requirements.txt"])
+        else:
+            print("Program won't run without requirements")
+            exit()
+
 
 print(len(sys.argv))
 print(sys.argv)
 
-jsonInfoFile = "testUsers.json"
+configJson = "configTest.json"
 
 valURL = re.compile( # regex to see if valid url
     r'^(?:http|ftp)s?://' # http:// or https://
@@ -37,10 +48,9 @@ class getPDF:
             currentUrl = self.driver.current_url
             if currentUrl.find("https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html") != -1: # logs you in to google in order to access the link provided 
                 print("Logging in to mynelson...")
-                with open(jsonInfoFile, "r") as read_file: # puts email in to google login from jsonInfoFile
+                with open(configJson, "r") as read_file: # puts email in to google login from configJson
                     data = json.load(read_file)
-                    login = self.driver.
-                    find_element_by_css_selector(".whsOnd.zHQkBf")
+                    login = self.driver.find_element_by_css_selector(".whsOnd.zHQkBf")
                     login.send_keys(data["user"]["email"])
                     self.driver.find_element_by_class_name("VfPpkd-dgl2Hf-ppHlrf-sM5MNb").click()
                 self.waitUrlChange(currentUrl)
@@ -53,7 +63,7 @@ class getPDF:
             currentUrl = self.driver.current_url
             if currentUrl.find("https://docs.google.com/forms/d/e/1FAIpQLSedNWLgRdQKVfNqT4gwYrq0PEJqj2vnOL5GHqfopjwnakC-0g/viewform") != -1: # fills out form 
                 print("Filling out form...")
-                with open(jsonInfoFile, "r") as read_file: # puts email in to google login from jsonInfoFile
+                with open(configJson, "r") as read_file: # puts email in to google login from configJson
                     data = json.load(read_file)
                     textBoxes = self.driver.find_elements_by_class_name("quantumWizTextinputPaperinputInput")
                     textBoxes[0].send_keys(data["user"]["firstName"])
@@ -108,8 +118,14 @@ class getPDF:
 
 # Program starts running
 if __name__ == '__main__':
+    browserPath = ""
+    with open(configJson, "r") as read_file:
+        data = json.load(read_file)
+        if os.path.isfile(data["browserPath"]):
+            browserPath = data["browserPath"]
+
     #login
-    form = getPDF(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = "/usr/bin/brave")
-    form.run()
-    form.quit()
+    # form = getPDF(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath)
+    # form.run()
+    # form.quit()
     pass
