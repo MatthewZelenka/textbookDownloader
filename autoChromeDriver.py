@@ -65,7 +65,6 @@ def autoInstall(browserPath = None):
                 if os.path.isfile(browserPath) == False: 
                     print(browserPath,"is not a valid path to file")
                     exit()
-            print("Win 10", browserPath)
             version = os.popen("wmic datafile where 'name=\""+browserPath.replace("\\", "\\\\").replace("/", "\\\\")+"\"' get version").read().splitlines()[2]
             extractDriver(downloadDriver(downloadPage=getLinkFromKeyword(site=chromeDriverSite, keyword=version.split(".")[0]), osType=sys.platform))
             # wmic datafile where 'name="C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"' get version
