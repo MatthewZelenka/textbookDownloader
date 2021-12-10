@@ -47,8 +47,8 @@ def autoInstall(browserPath = None):
         with zipfile.ZipFile(filePath) as zip_ref:
             zip_ref.extractall(os.path.dirname(filePath))
             zip_ref.close()
-        os.chmod(os.path.dirname(filePath)+"/chromedriver", 755)
         os.remove(filePath)
+        return filePath+"/chromedriver"
 
     chromeDriverSite = "https://chromedriver.chromium.org/downloads"
     if sys.platform == "win32": # checks to see if platform is windows
@@ -86,10 +86,9 @@ def autoInstall(browserPath = None):
                 print(browserPath,"is not a valid path to file")
                 exit()
         version = os.popen(browserPath+" --version").read().split(" ")[-2]
-        extractDriver(downloadDriver(downloadPage=getLinkFromKeyword(site=chromeDriverSite, keyword=version.split(".")[0]), osType=sys.platform))
-        
+        os.chmod(extractDriver(downloadDriver(downloadPage=getLinkFromKeyword(site=chromeDriverSite, keyword=version.split(".")[0]), osType=sys.platform)), 755)
     else:
         print("Automatic drivers unable to be downloaded for "+sys.platform+" go to \""+chromeDriverSite+"\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
 
 if __name__=="__main__":
-    autoInstall(browserPath = "/usr/bin/brave")
+    autoInstall(browserPath = "C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe")
