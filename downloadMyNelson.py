@@ -1,4 +1,4 @@
-import pip, time, json, os, sys, re
+import pip, time, json, os, sys, re, requests, zipfile
 from datetime import datetime
 from datetime import time as dttime
 while True:
@@ -8,7 +8,7 @@ while True:
         from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
         from selenium.webdriver.support.ui import WebDriverWait
         from selenium.webdriver.support import expected_conditions as EC
-        from bs4 import BeautifulSoup
+        from bs4 import BeautifulSoup, SoupStrainer
         from urllib.request import Request, urlopen
         break
     except:
@@ -26,6 +26,40 @@ while True:
 configJson = "configTest.json"
 
 def autoInstallChromeDriver(browserPath = None):
+    def getLinkFromKeyword(site, keyword): #gets chrome driver version link from the site and current version of browser
+        print(site)
+        print("("+keyword+")")
+        req = Request(site)
+        html_page = urlopen(req) # gets webpage data
+
+        soup = BeautifulSoup(html_page, features="lxml", parse_only=SoupStrainer('a')) # into bs object
+
+        links = []
+        for link in soup.findAll('a'): # goes throught all the links in the html file and gets the ones with the keyword
+            if keyword in str(link.get('href')):
+                links.append(link.get('href'))
+        return links[0] # returns first instance as it is probably 99% of the time the correct link
+    
+    def downloadDriver(downloadPage: str, osType): # gets driver version then inserts it in to the download link for supported os
+        downloadUrlBase = "https://chromedriver.storage.googleapis.com/"
+        osTypeToDriverZip = {
+            "win32":"chromedriver_win32.zip",
+            "linux":"chromedriver_linux64.zip"
+        }
+        print(downloadPage)
+        print(osType)
+        url = downloadUrlBase+downloadPage[downloadPage.find("path=")+5:]+osTypeToDriverZip[osType] # the combining
+        print(url)
+        r = requests.get(url, allow_redirects=True)
+        open(os.path.join(sys.path[0], osTypeToDriverZip[osType]), 'wb').write(r.content)
+        return os.path.join(sys.path[0], osTypeToDriverZip[osType])
+
+    def extractDriver(filePath):
+        with zipfile.ZipFile(filePath, 'r') as zip_ref:
+            zip_ref.extractall(os.path.dirname(filePath))
+            zip_ref.close()
+        os.remove(filePath)
+
     chromeDriverSite = "https://chromedriver.chromium.org/downloads"
     if sys.platform == "win32": # checks to see if platform is windows
         if sys.getwindowsversion().major == 10: # checks to see if running windows 10
@@ -44,17 +78,7 @@ def autoInstallChromeDriver(browserPath = None):
                     exit()
             print("Win 10", browserPath)
             version = os.popen("wmic datafile where 'name=\""+browserPath.replace("\\", "\\\\").replace("/", "\\\\")+"\"' get version").read().splitlines()[2]
-            req = Request(chromeDriverSite)
-            html_page = urlopen(req)
-
-            soup = BeautifulSoup(html_page, "lxml")
-
-            links = []
-            for link in soup.findAll('a'):
-                if version.split(".")[0] in str(link.get('href')):
-                    links.append(link.get('href'))
-
-            print(links[0])
+            extractDriver(downloadDriver(downloadPage=getLinkFromKeyword(site=chromeDriverSite, keyword=version.split(".")[0]), osType=sys.platform))
             # wmic datafile where 'name="C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"' get version
         else:
             print("Automatic drivers unable to be downloaded for Windows "+str(sys.getwindowsversion().major)+" go to \""+chromeDriverSite+"\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
