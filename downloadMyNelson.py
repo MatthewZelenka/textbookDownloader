@@ -8,6 +8,8 @@ while True:
         from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
         from selenium.webdriver.support.ui import WebDriverWait
         from selenium.webdriver.support import expected_conditions as EC
+        from bs4 import BeautifulSoup
+        from urllib.request import Request, urlopen
         break
     except:
         print("Dependencies required for",os.path.basename(__file__)+":")
@@ -24,6 +26,7 @@ while True:
 configJson = "configTest.json"
 
 def autoInstallChromeDriver(browserPath = None):
+    chromeDriverSite = "https://chromedriver.chromium.org/downloads"
     if sys.platform == "win32": # checks to see if platform is windows
         if sys.getwindowsversion().major == 10: # checks to see if running windows 10
             possiblePaths = [os.environ["ProgramFiles"]+"\Google\Chrome\Application\chrome.exe",os.environ["ProgramFiles(x86)"]+"\Google\Chrome\Application\chrome.exe",os.environ["LocalAppData"]+"\Google\Chrome\Application\chrome.exe"]
@@ -40,12 +43,23 @@ def autoInstallChromeDriver(browserPath = None):
                     print(browserPath,"is not a valid path to file")
                     exit()
             print("Win 10", browserPath)
-            print(os.popen("wmic datafile where 'name=\""+browserPath.replace("\\", "\\\\").replace("/", "\\\\")+"\"' get version").read().splitlines()[2])
+            version = os.popen("wmic datafile where 'name=\""+browserPath.replace("\\", "\\\\").replace("/", "\\\\")+"\"' get version").read().splitlines()[2]
+            req = Request(chromeDriverSite)
+            html_page = urlopen(req)
+
+            soup = BeautifulSoup(html_page, "lxml")
+
+            links = []
+            for link in soup.findAll('a'):
+                if version.split(".")[0] in str(link.get('href')):
+                    links.append(link.get('href'))
+
+            print(links[0])
             # wmic datafile where 'name="C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"' get version
         else:
-            print("Automatic drivers unable to be downloaded for Windows "+str(sys.getwindowsversion().major)+" go to \"https://chromedriver.chromium.org/downloads\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
+            print("Automatic drivers unable to be downloaded for Windows "+str(sys.getwindowsversion().major)+" go to \""+chromeDriverSite+"\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
     else:
-        print("Automatic drivers unable to be downloaded for "+sys.platform+" go to \"https://chromedriver.chromium.org/downloads\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
+        print("Automatic drivers unable to be downloaded for "+sys.platform+" go to \""+chromeDriverSite+"\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
     
 
 valURL = re.compile( # regex to see if valid url
