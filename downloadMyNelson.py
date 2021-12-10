@@ -11,20 +11,42 @@ while True:
         break
     except:
         print("Dependencies required for",os.path.basename(__file__)+":")
-        with open("requirements.txt", "r") as reqFile:
+        with open(os.path.join(sys.path[0], "requirements.txt"), "r") as reqFile:
             req = reqFile.readline()
             print(req)
             answer = input("Do you wanna install these dependencies if not installed already [Y/n] ").lower()
         if (answer == "y" or answer == ""):
-            pip.main(['install', "-r", "requirements.txt"])
+            pip.main(['install', "-r", os.path.join(sys.path[0], "requirements.txt")])
         else:
             print(os.path.basename(__file__),"won't run without the dependencies")
             exit()
 
 configJson = "configTest.json"
 
-def autoInstallChromeDriver(browser = None):
-    print(sys.platform)
+def autoInstallChromeDriver(browserPath = None):
+    if sys.platform == "win32": # checks to see if platform is windows
+        if sys.getwindowsversion().major == 10: # checks to see if running windows 10
+            possiblePaths = [os.environ["ProgramFiles"]+"\Google\Chrome\Application\chrome.exe",os.environ["ProgramFiles(x86)"]+"\Google\Chrome\Application\chrome.exe",os.environ["LocalAppData"]+"\Google\Chrome\Application\chrome.exe"]
+            if browserPath == None: # if browser path is not predetermined runs through expected locations
+                for path in possiblePaths:
+                    if os.path.isfile(path):
+                        browserPath = path
+                        break
+                    elif path == possiblePaths[-1]:
+                        print("Chrome browser not found please download or set explicit location")
+                        exit()
+            else:
+                if os.path.isfile(browserPath) == False: 
+                    print(browserPath,"is not a valid path to file")
+                    exit()
+            print("Win 10", browserPath)
+            print(os.popen("wmic datafile where 'name=\""+browserPath.replace("\\", "\\\\").replace("/", "\\\\")+"\"' get version").read().splitlines()[2])
+            # wmic datafile where 'name="C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"' get version
+        else:
+            print("Automatic drivers unable to be downloaded for Windows "+str(sys.getwindowsversion().major)+" go to \"https://chromedriver.chromium.org/downloads\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
+    else:
+        print("Automatic drivers unable to be downloaded for "+sys.platform+" "+str(sys.getwindowsversion().major)+" go to \"https://chromedriver.chromium.org/downloads\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
+    
 
 valURL = re.compile( # regex to see if valid url
     r'^(?:http|ftp)s?://' # http:// or https://
@@ -51,7 +73,7 @@ class getPDF:
             currentUrl = self.driver.current_url
             if currentUrl.find("https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html") != -1: # logs you in to google in order to access the link provided 
                 print("Logging in to mynelson...")
-                with open(configJson, "r") as read_file: # puts email in to google login from configJson
+                with open(os.path.join(sys.path[0], configJson), "r") as read_file: # puts email in to google login from configJson
                     data = json.load(read_file)
                     login = self.driver.find_element_by_css_selector(".whsOnd.zHQkBf")
                     login.send_keys(data["user"]["email"])
@@ -66,7 +88,7 @@ class getPDF:
             currentUrl = self.driver.current_url
             if currentUrl.find("https://docs.google.com/forms/d/e/1FAIpQLSedNWLgRdQKVfNqT4gwYrq0PEJqj2vnOL5GHqfopjwnakC-0g/viewform") != -1: # fills out form 
                 print("Filling out form...")
-                with open(configJson, "r") as read_file: # puts email in to google login from configJson
+                with open(os.path.join(sys.path[0], configJson), "r") as read_file: # puts email in to google login from configJson
                     data = json.load(read_file)
                     textBoxes = self.driver.find_elements_by_class_name("quantumWizTextinputPaperinputInput")
                     textBoxes[0].send_keys(data["user"]["firstName"])
@@ -122,11 +144,11 @@ class getPDF:
 # Program starts running
 if __name__ == '__main__':
     browserPath = ""
-    with open(configJson, "r") as read_file:
+    with open(os.path.join(sys.path[0], configJson), "r") as read_file:
         data = json.load(read_file)
         if os.path.isfile(data["browserPath"]):
             browserPath = data["browserPath"]
-    autoInstallChromeDriver()
+    autoInstallChromeDriver(browserPath = browserPath)
     #login
     # form = getPDF(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath)
     # form.run()
