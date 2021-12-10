@@ -53,7 +53,6 @@ class getPDF:
             currentUrl = self.driver.current_url
             if currentUrl.find("https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html") != -1: # logs you in to google in order to access the link provided 
                 print("Logging in to mynelson...")
-                # time.sleep(5)
                 with open(os.path.join(sys.path[0], configJson), "r") as read_file: # puts email in to google login from configJson
                     data = json.load(read_file)
                     # Clicks and inputs username
@@ -101,7 +100,7 @@ class getPDF:
             # set up
             caps = DesiredCapabilities().CHROME
             # caps["pageLoadStrategy"] = "normal"  #  complete
-            #caps["pageLoadStrategy"] = "eager"  #  interactive
+            # caps["pageLoadStrategy"] = "eager"  #  interactive
             # caps["pageLoadStrategy"] = "none"   #  undefined
 
             chromeOptions = webdriver.chrome.options.Options()
@@ -135,5 +134,8 @@ if __name__ == '__main__':
     #login
     form = getPDF(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath)
     form.run()
+    form.testLogin()
+    form.getTextbooks()
+    form.downloadTextbooks()
     # form.quit()
     pass
