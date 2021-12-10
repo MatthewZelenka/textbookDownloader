@@ -45,7 +45,7 @@ def autoInstallChromeDriver(browserPath = None):
         else:
             print("Automatic drivers unable to be downloaded for Windows "+str(sys.getwindowsversion().major)+" go to \"https://chromedriver.chromium.org/downloads\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
     else:
-        print("Automatic drivers unable to be downloaded for "+sys.platform+" "+str(sys.getwindowsversion().major)+" go to \"https://chromedriver.chromium.org/downloads\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
+        print("Automatic drivers unable to be downloaded for "+sys.platform+" go to \"https://chromedriver.chromium.org/downloads\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
     
 
 valURL = re.compile( # regex to see if valid url
