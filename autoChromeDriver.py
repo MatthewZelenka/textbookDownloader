@@ -8,7 +8,7 @@ while True:
         if __name__ == '__main__':
             print("Dependencies required for",os.path.basename(__file__)+":")
             with open(os.path.join(sys.path[0], "requirements.txt"), "r") as reqFile:
-                req = reqFile.readline()
+                req = reqFile.read()
                 print(req)
                 answer = input("Do you wanna install these dependencies if not installed already [Y/n] ").lower()
             if (answer == "y" or answer == ""):
