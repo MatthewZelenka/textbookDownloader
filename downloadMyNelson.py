@@ -6,21 +6,25 @@ while True:
         import autoChromeDriver
         from selenium import webdriver
         from selenium.webdriver.common.by import By
+        from selenium.webdriver.chrome.service import Service
         from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
         from selenium.webdriver.support.ui import WebDriverWait
         from selenium.webdriver.support import expected_conditions as EC
         break
     except:
-        print("Dependencies required for",os.path.basename(__file__)+":")
-        with open(os.path.join(sys.path[0], "requirements.txt"), "r") as reqFile:
-            req = reqFile.read()
-            print(req)
-            answer = input("Do you wanna install these dependencies if not installed already [Y/n] ").lower()
-        if (answer == "y" or answer == ""):
-            pip.main(['install', "-r", os.path.join(sys.path[0], "requirements.txt")])
+        if __name__ == '__main__':
+            print("Dependencies required for",os.path.basename(__file__)+":")
+            with open(os.path.join(sys.path[0], "requirements.txt"), "r") as reqFile:
+                req = reqFile.read()
+                print(req)
+                answer = input("Do you wanna install these dependencies if not installed already [Y/n] ").lower()
+            if (answer == "y" or answer == ""):
+                pip.main(['install', "-r", os.path.join(sys.path[0], "requirements.txt")])
+            else:
+                print(os.path.basename(__file__),"won't run without the dependencies")
+                exit()
         else:
-            print(os.path.basename(__file__),"won't run without the dependencies")
-            exit()
+            raise
 
 configJson = "configTest.json"    
 
@@ -51,9 +55,11 @@ class getPDF:
                 print("Logging in to mynelson...")
                 with open(os.path.join(sys.path[0], configJson), "r") as read_file: # puts email in to google login from configJson
                     data = json.load(read_file)
-                    login = self.driver.find_element_by_css_selector(".whsOnd.zHQkBf")
-                    login.send_keys(data["user"]["email"])
-                    self.driver.find_element_by_class_name("VfPpkd-dgl2Hf-ppHlrf-sM5MNb").click()
+                    credentialInput = self.driver.find_elements(By.CLASS_NAME, "form-control required jstlTagLogin")
+                    print(credentialInput)
+                    # login = self.driver.find_element_by_css_selector(".whsOnd.zHQkBf")
+                    # login.send_keys(data["user"]["email"])
+                    # self.driver.find_element_by_class_name("VfPpkd-dgl2Hf-ppHlrf-sM5MNb").click()
                 self.waitUrlChange(currentUrl)
             else:
                 break
@@ -104,7 +110,7 @@ class getPDF:
                 print("Browser in that location does not exist")
 
             # initiating the webdriver. Parameter includes the path of the webdriver.
-            self.driver = webdriver.Chrome(desired_capabilities=caps, executable_path=self.webDriverPath, options=chromeOptions)
+            self.driver = webdriver.Chrome(desired_capabilities=caps, service=Service(self.webDriverPath), options=chromeOptions)
             self.driver.get(self.url) # goes to starting url
             self.autoLogin()
             # self.fillForm()
@@ -121,9 +127,9 @@ if __name__ == '__main__':
         data = json.load(read_file)
         if os.path.isfile(data["browserPath"]):
             browserPath = data["browserPath"]
-    autoChromeDriver.autoInstall(browserPath = browserPath)
+    # autoChromeDriver.autoInstall(browserPath = browserPath)
     #login
-    # form = getPDF(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath)
-    # form.run()
+    form = getPDF(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath)
+    form.run()
     # form.quit()
     pass
