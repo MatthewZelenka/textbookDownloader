@@ -21,8 +21,6 @@ while True:
 
 def autoInstall(browserPath = None):
     def getLinkFromKeyword(site, keyword): #gets chrome driver version link from the site and current version of browser
-        print(site)
-        print("("+keyword+")")
         req = Request(site)
         html_page = urlopen(req) # gets webpage data
 
@@ -40,10 +38,7 @@ def autoInstall(browserPath = None):
             "win32":"chromedriver_win32.zip",
             "linux":"chromedriver_linux64.zip"
         }
-        print(downloadPage)
-        print(osType)
         url = downloadUrlBase+downloadPage[downloadPage.find("path=")+5:]+osTypeToDriverZip[osType] # the combining
-        print(url)
         r = requests.get(url, allow_redirects=True)
         open(os.path.join(sys.path[0], osTypeToDriverZip[osType]), 'wb').write(r.content)
         return os.path.join(sys.path[0], osTypeToDriverZip[osType])
