@@ -21,11 +21,10 @@ while True:
             print(os.path.basename(__file__),"won't run without the dependencies")
             exit()
 
-
-print(len(sys.argv))
-print(sys.argv)
-
 configJson = "configTest.json"
+
+def autoInstallChromeDriver(browser = None):
+    print(sys.platform)
 
 valURL = re.compile( # regex to see if valid url
     r'^(?:http|ftp)s?://' # http:// or https://
@@ -127,7 +126,7 @@ if __name__ == '__main__':
         data = json.load(read_file)
         if os.path.isfile(data["browserPath"]):
             browserPath = data["browserPath"]
-
+    autoInstallChromeDriver()
     #login
     # form = getPDF(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath)
     # form.run()
