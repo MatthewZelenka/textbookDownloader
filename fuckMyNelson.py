@@ -1,4 +1,6 @@
-import pip
+import pip, time, json, os, sys, re
+from datetime import datetime
+from datetime import time as dttime
 while True:
     try:
         from selenium import webdriver
@@ -6,15 +8,17 @@ while True:
         from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
         from selenium.webdriver.support.ui import WebDriverWait
         from selenium.webdriver.support import expected_conditions as EC
-        from datetime import datetime
-        from datetime import time as dttime
-        import time, json, os, sys, re
         break
     except:
-        if (input("Do you wanna install these requests [Y/n]").lower() == ("y" or "")):
+        print("Dependencies required for",os.path.basename(__file__)+":")
+        with open("requirements.txt", "r") as reqFile:
+            req = reqFile.readline()
+            print(req)
+            answer = input("Do you wanna install these dependencies if not installed already [Y/n] ").lower()
+        if (answer == "y" or answer == ""):
             pip.main(['install', "-r", "requirements.txt"])
         else:
-            print("Program won't run without requirements")
+            print(os.path.basename(__file__),"won't run without the dependencies")
             exit()
 
 
