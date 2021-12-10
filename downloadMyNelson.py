@@ -53,13 +53,17 @@ class getPDF:
             currentUrl = self.driver.current_url
             if currentUrl.find("https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html") != -1: # logs you in to google in order to access the link provided 
                 print("Logging in to mynelson...")
+                # time.sleep(5)
                 with open(os.path.join(sys.path[0], configJson), "r") as read_file: # puts email in to google login from configJson
                     data = json.load(read_file)
-                    credentialInput = self.driver.find_elements(By.CLASS_NAME, "form-control required jstlTagLogin")
-                    print(credentialInput)
-                    # login = self.driver.find_element_by_css_selector(".whsOnd.zHQkBf")
-                    # login.send_keys(data["user"]["email"])
-                    # self.driver.find_element_by_class_name("VfPpkd-dgl2Hf-ppHlrf-sM5MNb").click()
+                    # Clicks and inputs username
+                    self.driver.find_element(By.ID, "txt-clear").click()
+                    self.driver.find_element(By.ID, "txtUName").send_keys(data["users"]["user1"]["email"])
+                    # Clicks and inputs password
+                    self.driver.find_element(By.ID, "password-clear").click()
+                    self.driver.find_element(By.ID, "txtPwd").send_keys(data["users"]["user1"]["password"])
+                    # Clicks on login
+                    self.driver.find_element(By.ID, "btnLogin").click()
                 self.waitUrlChange(currentUrl)
             else:
                 break
