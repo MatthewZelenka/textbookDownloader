@@ -44,9 +44,10 @@ def autoInstall(browserPath = None):
         return os.path.join(sys.path[0], osTypeToDriverZip[osType])
 
     def extractDriver(filePath):
-        with zipfile.ZipFile(filePath, 'r') as zip_ref:
+        with zipfile.ZipFile(filePath) as zip_ref:
             zip_ref.extractall(os.path.dirname(filePath))
             zip_ref.close()
+        os.chmod(os.path.dirname(filePath)+"/chromedriver", 755)
         os.remove(filePath)
 
     chromeDriverSite = "https://chromedriver.chromium.org/downloads"
@@ -70,8 +71,25 @@ def autoInstall(browserPath = None):
             # wmic datafile where 'name="C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"' get version
         else:
             print("Automatic drivers unable to be downloaded for Windows "+str(sys.getwindowsversion().major)+" go to \""+chromeDriverSite+"\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
+    elif sys.platform == "linux":
+        possiblePaths = ["/usr/bin/google-chrome"]
+        if browserPath == None: # if browser path is not predetermined runs through expected locations
+            for path in possiblePaths:
+                if os.path.isfile(path):
+                    browserPath = path
+                    break
+                elif path == possiblePaths[-1]:
+                    print("Chrome browser not found please download or set explicit location")
+                    exit()
+        else:
+            if os.path.isfile(browserPath) == False: 
+                print(browserPath,"is not a valid path to file")
+                exit()
+        version = os.popen(browserPath+" --version").read().split(" ")[-2]
+        extractDriver(downloadDriver(downloadPage=getLinkFromKeyword(site=chromeDriverSite, keyword=version.split(".")[0]), osType=sys.platform))
+        
     else:
         print("Automatic drivers unable to be downloaded for "+sys.platform+" go to \""+chromeDriverSite+"\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
 
 if __name__=="__main__":
-    autoInstall(browserPath = "C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe")
+    autoInstall(browserPath = "/usr/bin/brave")
