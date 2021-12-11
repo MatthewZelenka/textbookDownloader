@@ -173,28 +173,33 @@ class myNelson:
     def getTextbookList(self, name: str):
         self.setup()
         self.autoLogin(name=name)
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "productMain")))
-        textbooks = [str(textbook.text).removeprefix("Loading...\n").replace("\n", " - ") for textbook in self.driver.find_elements(By.CLASS_NAME, "productMain")]
-        self.quit()
-        return textbooks
+        try:
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "productMain")))
+            textbooks = [str(textbook.text).removeprefix("Loading...\n").replace("\n", " - ") for textbook in self.driver.find_elements(By.CLASS_NAME, "productMain")]
+            self.quit()
+            return textbooks
+        except:
+            self.quit()
     
     def makeTextbookDirectorys(self, name: str, textbooksNames: list = ["all"]):
         self.setup()
         self.autoLogin(name=name)
-        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "productMain")))
-        textbooks = self.driver.find_elements(By.CLASS_NAME, "productMain")
-        for textbook in textbooks:
-            if "all" in textbooksNames or str(textbook.text).removeprefix("Loading...\n").replace("\n", " - ") in textbooksNames:
-                try:
-                    os.mkdir(os.path.join(sys.path[0],"users",name,str(textbook.text).removeprefix("Loading...\n").replace("\n", " - ")))
-                except FileExistsError:
-                    pass
-                r = requests.get(textbook.find_element(By.CLASS_NAME, "prodImage").get_attribute('src'), allow_redirects=True)
-                with open(os.path.join(os.path.join(sys.path[0],"users",name,str(textbook.text).removeprefix("Loading...\n").replace("\n", " - "),"cover.png")), 'wb') as cover:
-                    cover.write(r.content)
-                    cover.close()
-                
-        self.quit()
+        try:
+            WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "prouctMain")))
+            textbooks = self.driver.find_elements(By.CLASS_NAME, "productMain")
+            for textbook in textbooks:
+                if "all" in textbooksNames or str(textbook.text).removeprefix("Loading...\n").replace("\n", " - ") in textbooksNames:
+                    try:
+                        os.mkdir(os.path.join(sys.path[0],"users",name,str(textbook.text).removeprefix("Loading...\n").replace("\n", " - ")))
+                    except FileExistsError:
+                        pass
+                    r = requests.get(textbook.find_element(By.CLASS_NAME, "prodImage").get_attribute('src'), allow_redirects=True)
+                    with open(os.path.join(os.path.join(sys.path[0],"users",name,str(textbook.text).removeprefix("Loading...\n").replace("\n", " - "),"cover.png")), 'wb') as cover:
+                        cover.write(r.content)
+                        cover.close()
+            self.quit()
+        except:
+            self.quit()
 
 # Program starts running
 if __name__ == '__main__':
