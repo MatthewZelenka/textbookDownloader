@@ -1,8 +1,8 @@
 import pip, os, sys, requests, zipfile
+from urllib.request import Request, urlopen
 while True:
     try:
         from bs4 import BeautifulSoup, SoupStrainer
-        from urllib.request import Request, urlopen
         break
     except:
         if __name__ == '__main__':
@@ -40,7 +40,9 @@ def autoInstall(browserPath = None):
         }
         url = downloadUrlBase+downloadPage[downloadPage.find("path=")+5:]+osTypeToDriverZip[osType] # the combining
         r = requests.get(url, allow_redirects=True)
-        open(os.path.join(sys.path[0], osTypeToDriverZip[osType]), 'wb').write(r.content)
+        with open(os.path.join(sys.path[0], osTypeToDriverZip[osType]), 'wb') as file:
+            file.write(r.content)
+            file.close()
         return os.path.join(sys.path[0], osTypeToDriverZip[osType])
 
     def extractDriver(filePath):
@@ -91,4 +93,4 @@ def autoInstall(browserPath = None):
         print("Automatic drivers unable to be downloaded for "+sys.platform+" go to \""+chromeDriverSite+"\" to download manually for your chrome based browser and put in the folder \""+os.path.dirname(__file__)+"\"")
 
 if __name__=="__main__":
-    autoInstall(browserPath = "/usr/bin/brave")
+    autoInstall()

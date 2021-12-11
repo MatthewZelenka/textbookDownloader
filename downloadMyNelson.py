@@ -1,6 +1,8 @@
-import pip, time, json, os, sys, re
+import pip, time, json, os, sys, re, shutil, requests
 from datetime import datetime
 from datetime import time as dttime
+
+import selenium
 while True:
     try:
         import autoChromeDriver
@@ -45,22 +47,32 @@ class config():
         }
         with open(os.path.join(sys.path[0],configJson), "w") as confFile:
             confFile.write(json.dumps(baseConfig, indent=4))
+        os.mkdir(os.path.join(sys.path[0],"users"))
     @staticmethod
     def listUsers():
         with open(os.path.join(sys.path[0], configJson), "r") as confFile: # 
             return list(json.load(confFile)["Users"].keys())
     @staticmethod
     def userAdd(username: str, password: str, name: str = None):
-        print(name)
         data: dict
         with open(os.path.join(sys.path[0], configJson), "r") as confFile: # 
             data = json.load(confFile)
         data["users"].update({(username if name == None else name):{"email": username, "password": password}})
         with open(os.path.join(sys.path[0],configJson), "w") as confFile:
             confFile.write(json.dumps(data, indent=4))
+        os.mkdir(os.path.join(sys.path[0],"users",(username if name == None else name)))
     @staticmethod
-    def userDelete():
-        pass
+    def userDelete(name: str):
+        try:
+            shutil.rmtree(os.path.join(sys.path[0],"users",name))
+            data: dict
+            with open(os.path.join(sys.path[0], configJson), "r") as confFile: # 
+                data = json.load(confFile)
+            data["users"].pop(name)
+            with open(os.path.join(sys.path[0],configJson), "w") as confFile:
+                confFile.write(json.dumps(data, indent=4))
+        except OSError as e:
+            print("Error: %s - %s." % (e.filename, e.strerror))
 
 class myNelson:
     def __init__(self, url, webDriverPath="./chromedriver", browser=None, browserHide = False):
@@ -70,27 +82,29 @@ class myNelson:
         self.browser = browser
         self.browserHide = browserHide
 
-    def waitUrlChange(self, currentURL): # function to wait for next page to load before continuing 
-        WebDriverWait(self.driver, 10).until(lambda driver: driver.current_url != currentURL)
+    def waitUrlChange(self, currentURL: str, waitTime: int = 10): # function to wait for next page to load before continuing 
+        try:
+            WebDriverWait(self.driver, waitTime).until(lambda driver: driver.current_url != currentURL)
+            return True
+        except selenium.common.exceptions.TimeoutException:
+            return False
 
-    def autoLogin(self):
-        while True:
-            currentUrl = self.driver.current_url
-            if currentUrl.find("https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html") != -1: # logs you in to google in order to access the link provided 
-                print("Logging in to mynelson...")
-                with open(os.path.join(sys.path[0], configJson), "r") as read_file: # puts email in to google login from configJson
-                    data = json.load(read_file)
-                    # Clicks and inputs username
-                    self.driver.find_element(By.ID, "txt-clear").click()
-                    self.driver.find_element(By.ID, "txtUName").send_keys(data["users"]["user1"]["email"])
-                    # Clicks and inputs password
-                    self.driver.find_element(By.ID, "password-clear").click()
-                    self.driver.find_element(By.ID, "txtPwd").send_keys(data["users"]["user1"]["password"])
-                    # Clicks on login
-                    self.driver.find_element(By.ID, "btnLogin").click()
-                self.waitUrlChange(currentUrl)
-            else:
-                break
+
+    def autoLogin(self, name, waitUrlChange:bool = True, waitTime: int = 10):
+        currentUrl = self.driver.current_url
+        if currentUrl.find("https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html") != -1: # logs you in to google in order to access the link provided 
+            print("Logging in to mynelson...")
+            with open(os.path.join(sys.path[0], configJson), "r") as read_file: # puts email in to google login from configJson
+                data = json.load(read_file)
+                # Clicks and inputs username
+                self.driver.find_element(By.ID, "txt-clear").click()
+                self.driver.find_element(By.ID, "txtUName").send_keys(data["users"][name]["email"])
+                # Clicks and inputs password
+                self.driver.find_element(By.ID, "password-clear").click()
+                self.driver.find_element(By.ID, "txtPwd").send_keys(data["users"][name]["password"])
+                # Clicks on login
+                self.driver.find_element(By.ID, "btnLogin").click()
+            if waitUrlChange == True: self.waitUrlChange(currentURL=currentUrl, waitTime=waitTime)
         pass
 
     def fillForm(self):
@@ -140,13 +154,47 @@ class myNelson:
             # initiating the webdriver. Parameter includes the path of the webdriver.
             self.driver = webdriver.Chrome(desired_capabilities=caps, service=Service(self.webDriverPath), options=chromeOptions)
             self.driver.get(self.url) # goes to starting url
-            self.autoLogin()
+            # self.autoLogin()
             # self.fillForm()
         except Exception as err:
             print("Driver has stopped working\nShutting down...\n", err) # if something fails in the process of logging in to class it shuts down
 
     def quit(self):
         self.driver.quit() # quits webdriver
+
+    def testLogin(self, name):
+        self.setup()
+        currentUrl = self.driver.current_url
+        self.autoLogin(name=name, waitUrlChange=True, waitTime=2)
+        result = False if currentUrl == self.driver.current_url else True
+        self.quit()
+        return result
+    
+    def getTextbookList(self, name: str):
+        self.setup()
+        self.autoLogin(name=name)
+        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "productMain")))
+        textbooks = [str(textbook.text).removeprefix("Loading...\n").replace("\n", " - ") for textbook in self.driver.find_elements(By.CLASS_NAME, "productMain")]
+        self.quit()
+        return textbooks
+    
+    def makeTextbookDirectorys(self, name: str, textbooksNames: list = ["all"]):
+        self.setup()
+        self.autoLogin(name=name)
+        WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "productMain")))
+        textbooks = self.driver.find_elements(By.CLASS_NAME, "productMain")
+        for textbook in textbooks:
+            if "all" in textbooksNames or str(textbook.text).removeprefix("Loading...\n").replace("\n", " - ") in textbooksNames:
+                try:
+                    os.mkdir(os.path.join(sys.path[0],"users",name,str(textbook.text).removeprefix("Loading...\n").replace("\n", " - ")))
+                except FileExistsError:
+                    pass
+                r = requests.get(textbook.find_element(By.CLASS_NAME, "prodImage").get_attribute('src'), allow_redirects=True)
+                with open(os.path.join(os.path.join(sys.path[0],"users",name,str(textbook.text).removeprefix("Loading...\n").replace("\n", " - "),"cover.png")), 'wb') as cover:
+                    cover.write(r.content)
+                    cover.close()
+                
+        self.quit()
 
 # Program starts running
 if __name__ == '__main__':
@@ -155,13 +203,15 @@ if __name__ == '__main__':
         data = json.load(read_file)
         if os.path.isfile(data["browserPath"]):
             browserPath = data["browserPath"]
-    config().userAdd(username="a", password="b")
+    # config.gen()
+    config.userDelete(name="a")
     # autoChromeDriver.autoInstall(browserPath = browserPath)
     #login
-    # form = myNelson(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath)
+    form = myNelson(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath)
     # form.run()
-    # form.testLogin()
-    # form.getTextbooks()
+    # print(form.testLogin("user1"))
+    print(form.getTextbookList(name="user1"))
+    form.makeTextbookDirectorys(name="user1", textbooksNames=["Chemistry 12U - Student Text PDF (Online)"])
     # form.downloadTextbooks()
     # form.quit()
     pass
