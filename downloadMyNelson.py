@@ -26,7 +26,7 @@ while True:
         else:
             raise
 
-configJson = "configTest.json"    
+configJson = "config.json"    
 
 valURL = re.compile( # regex to see if valid url
     r'^(?:http|ftp)s?://' # http:// or https://
@@ -36,8 +36,33 @@ valURL = re.compile( # regex to see if valid url
     r'(?::\d+)?' # optional port
     r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
+class config():
+    @staticmethod
+    def gen():
+        baseConfig = {
+            "browserPath":"",
+            "users":{}
+        }
+        with open(os.path.join(sys.path[0],configJson), "w") as confFile:
+            confFile.write(json.dumps(baseConfig, indent=4))
+    @staticmethod
+    def listUsers():
+        with open(os.path.join(sys.path[0], configJson), "r") as confFile: # 
+            return list(json.load(confFile)["Users"].keys())
+    @staticmethod
+    def userAdd(username: str, password: str, name: str = None):
+        print(name)
+        data: dict
+        with open(os.path.join(sys.path[0], configJson), "r") as confFile: # 
+            data = json.load(confFile)
+        data["users"].update({(username if name == None else name):{"email": username, "password": password}})
+        with open(os.path.join(sys.path[0],configJson), "w") as confFile:
+            confFile.write(json.dumps(data, indent=4))
+    @staticmethod
+    def userDelete():
+        pass
 
-class getPDF:
+class myNelson:
     def __init__(self, url, webDriverPath="./chromedriver", browser=None, browserHide = False):
         #url of the page we want to run
         self.url = url
@@ -95,7 +120,7 @@ class getPDF:
                 print("Form is closed")
                 break
 
-    def run(self):
+    def setup(self):
         try:
             # set up
             caps = DesiredCapabilities().CHROME
@@ -130,12 +155,13 @@ if __name__ == '__main__':
         data = json.load(read_file)
         if os.path.isfile(data["browserPath"]):
             browserPath = data["browserPath"]
+    config().userAdd(username="a", password="b")
     # autoChromeDriver.autoInstall(browserPath = browserPath)
     #login
-    form = getPDF(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath)
-    form.run()
-    form.testLogin()
-    form.getTextbooks()
-    form.downloadTextbooks()
+    # form = myNelson(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath)
+    # form.run()
+    # form.testLogin()
+    # form.getTextbooks()
+    # form.downloadTextbooks()
     # form.quit()
     pass
