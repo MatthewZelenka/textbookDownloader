@@ -1,32 +1,13 @@
-import pip, time, json, os, sys, re, shutil, requests
+import time, json, os, sys, re, shutil, requests, autoChromeDriver
 from datetime import datetime
 from datetime import time as dttime
 
-import selenium
-while True:
-    try:
-        import autoChromeDriver
-        from selenium import webdriver
-        from selenium.webdriver.common.by import By
-        from selenium.webdriver.chrome.service import Service
-        from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
-        break
-    except:
-        if __name__ == '__main__':
-            print("Dependencies required for",os.path.basename(__file__)+":")
-            with open(os.path.join(sys.path[0], "requirements.txt"), "r") as reqFile:
-                req = reqFile.read()
-                print(req)
-                answer = input("Do you wanna install these dependencies if not installed already [Y/n] ").lower()
-            if (answer == "y" or answer == ""):
-                pip.main(['install', "-r", os.path.join(sys.path[0], "requirements.txt")])
-            else:
-                print(os.path.basename(__file__),"won't run without the dependencies")
-                exit()
-        else:
-            raise
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 configJson = "config.json"    
 
@@ -209,7 +190,7 @@ if __name__ == '__main__':
         if os.path.isfile(data["browserPath"]):
             browserPath = data["browserPath"]
     # config.gen()
-    config.userDelete(name="a")
+    # config.userDelete(name="a")
     # autoChromeDriver.autoInstall(browserPath = browserPath)
     #login
     form = myNelson(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath)

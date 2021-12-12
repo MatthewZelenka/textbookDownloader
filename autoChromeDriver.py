@@ -1,23 +1,6 @@
-import pip, os, sys, requests, zipfile
+import os, sys, requests, zipfile
 from urllib.request import Request, urlopen
-while True:
-    try:
-        from bs4 import BeautifulSoup, SoupStrainer
-        break
-    except:
-        if __name__ == '__main__':
-            print("Dependencies required for",os.path.basename(__file__)+":")
-            with open(os.path.join(sys.path[0], "requirements.txt"), "r") as reqFile:
-                req = reqFile.read()
-                print(req)
-                answer = input("Do you wanna install these dependencies if not installed already [Y/n] ").lower()
-            if (answer == "y" or answer == ""):
-                pip.main(['install', "-r", os.path.join(sys.path[0], "requirements.txt")])
-            else:
-                print(os.path.basename(__file__),"won't run without the dependencies")
-                exit()
-        else:
-            raise
+from bs4 import BeautifulSoup, SoupStrainer
 
 def autoInstall(browserPath = None):
     def getLinkFromKeyword(site, keyword): #gets chrome driver version link from the site and current version of browser
