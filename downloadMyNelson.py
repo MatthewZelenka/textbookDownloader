@@ -79,6 +79,7 @@ class myNelson:
         currentUrl = self.driver.current_url
         if currentUrl.find("https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html") != -1: # logs you in to google in order to access the link provided 
             print("Logging in to mynelson...")
+            WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.ID, "txt-clear")))
             with open(os.path.join(sys.path[0], configJson), "r") as read_file: # puts email in to google login from configJson
                 data = json.load(read_file)
                 # Clicks and inputs username
@@ -201,6 +202,8 @@ class myNelson:
         textbooks = self.driver.find_elements(By.CLASS_NAME, "productMain")
         for textbook in textbooks:
             if str(textbook.text).removeprefix("Loading...\n").replace("\n", " - ") == textbookName:
+                pagesPath = os.path.join(sys.path[0],"users",name,str(textbook.text).removeprefix("Loading...\n").replace("\n", " - "),datetime.now().strftime("%d/%m/%Y-%H:%M:%S"),"tmp")
+                os.makedirs(pagesPath)
                 self.driver.get(textbook.find_element(By.CSS_SELECTOR, "a[title=\""+textbookName+"\"]").get_attribute('href'))
 
                 """
@@ -242,10 +245,18 @@ class myNelson:
                                             if (items.every(e => e.state === "COMPLETE"))
                                                 return items.map(e => e.fileUrl || e.file_url);
                                             """)
-                                    paths = WebDriverWait(self.driver, 120, 1).until(every_downloads_chrome)
+                                    downloadPaths = WebDriverWait(self.driver, 120, 1).until(every_downloads_chrome)
+                                    for clickx in self.driver.find_elements(By.CLASS_NAME, "icon-clear"):
+                                        clickx.click()
+                                    time.sleep(3)
                                     self.driver.close()
                                     self.driver.switch_to.window(window_name=self.driver.window_handles[0])
-                                    print(paths)
+                                    for chromeDownloadPath in downloadPaths:
+                                        try:
+                                            downloadPath = str(chromeDownloadPath).removeprefix("file://").replace("%20"," ")
+                                            shutil.move(downloadPath, os.path.join(pagesPath,str((sorted([int(os.path.splitext(file)[0]) for file in os.listdir(pagesPath)], reverse=True)[0]+1 if os.listdir(pagesPath) else 1))+os.path.splitext(os.path.basename(downloadPath))[-1]))
+                                        except:
+                                            pass
 
                             # print(self.driver.find_element(By.ID, "col2").find_element(By.ID, "linkList_Container").find_element(By.XPATH, "./*").get_attribute('class'))
                             # for j in self.driver.find_element(By.ID, "col2").find_elements(By.ID, "linkList_Container"): #.find_elements(By.XPATH, "./*")
