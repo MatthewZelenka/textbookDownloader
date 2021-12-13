@@ -246,6 +246,8 @@ class myNelson:
                                                 return items.map(e => e.fileUrl || e.file_url);
                                             """)
                                     downloadPaths = WebDriverWait(self.driver, 120, 1).until(every_downloads_chrome)
+                                    WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.CLASS_NAME, "icon-clear")))
+                                    print(self.driver.find_elements(By.CLASS_NAME, "icon-clear"))
                                     for clickx in self.driver.find_elements(By.CLASS_NAME, "icon-clear"):
                                         clickx.click()
                                     time.sleep(3)
