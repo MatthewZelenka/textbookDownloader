@@ -1,36 +1,32 @@
 import pikepdf # maybe pikepdf https://www.geeksforgeeks.org/how-to-crack-pdf-files-in-python/
-import os
+import os, sys
 
-passwordList = [""]
-
-def unlock(inputPath: str, outputPath: str = None, filename: str = None):
+def unlock(inputPdfPath: str, outputPdfPath: str = None):
+    passwordList = [""]
     for password in passwordList:
         try:
-            
-            # open PDF file and check each password
-            with pikepdf.open("/home/matthew/Documents/programing/python/fuckMyNelson/users/user1/Chemistry 12U - Student Text PDF (Online)/14-12-2021_11h-42m-01s/tmp/1.pdf", password = password) as p:
-                # If password is correct, break the loop
-                print("[+] Password found:", password)
+            # open pdf file and check each password
+            with pikepdf.open(inputPdfPath, password = password) as crackedPdf:
+                # If opened save cracked pdf 
+                fileOut = (outputPdfPath if outputPdfPath != None else os.path.join(os.path.dirname(inpuPdftPath),os.path.splitext(os.path.basename(inputPdfPath))[0]+"Cracked"+os.path.splitext(os.path.basename(inputPdfPath))[1]))
+                crackedPdf.save(fileOut)
                 break
-                
-        # If password will not match, it will raise PasswordError
-        except pikepdf._qpdf.PasswordError as e:
-            
-            # if password is wrong, continue the loop
+        except pikepdf._qpdf.PasswordError as err:
             continue
 
 
-def merge(inputPdfPaths, outputPdfPath, name):
-    pass
+def mergePdfs(inputPdfPaths: str, outputPdfPath: str):
+    mergePdf = pikepdf.Pdf.new()
+    for pdfPath in inputPdfPaths:
+        pdfPart = pikepdf.Pdf.open(pdfPath)
+        mergePdf.pages.extend(pdfPart.pages)
+        pdfPart.close()
+    mergePdf.save(outputPdfPath)
 
 if __name__ == '__main__':
-    unlock(inputPath="1")
-    # merger = PdfFileMerger()
-    # pathIn = "D://Programing//Python//programs//fuckMyNelson//users//user1//Chemistry 12U - Student Text PDF (Online)//13-12-2021_19h-29m-36s//tmp"
-    # pathOut = "D://Programing//Python//programs//fuckMyNelson//users//user1//Chemistry 12U - Student Text PDF (Online)//13-12-2021_19h-29m-36s"
-    # name = "Chemistry 12U - Student Text PDF (Online).pdf"
-    # print()
-    # for pdf in sorted(os.listdir(pathIn), key=lambda x: int(os.path.splitext(x)[0])):
-    #     merger.append(os.path.join(pathIn,pdf))
-    # merger.write(os.path.join(pathOut,name))
-    # merger.close()
+    pathTmp = os.path.join(sys.path[0],"users","user1","Chemistry 12U - Student Text PDF (Online)","13-12-2021_19h-29m-36s","tmp")
+    pathCracked = os.path.join(sys.path[0],"users","user1","Chemistry 12U - Student Text PDF (Online)","13-12-2021_19h-29m-36s","cracked")
+    pathMerge = os.path.join(sys.path[0],"users","user1","Chemistry 12U - Student Text PDF (Online)","13-12-2021_19h-29m-36s","Chemistry 12U - Student Text PDF (Online)"+".pdf")
+    # for pdf in os.listdir(pathTmp):
+    #     unlock(inputPdfPath=os.path.join(pathTmp,pdf), outputPdfPath=os.path.join(pathCracked,pdf))    
+    mergePdfs(inputPdfPaths = [os.path.join(pathTmp, file) for file in sorted(os.listdir(pathTmp), key=lambda x: int(os.path.splitext(x)[0]))], outputPdfPath = pathMerge)
