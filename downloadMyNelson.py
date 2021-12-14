@@ -215,7 +215,10 @@ class myNelson:
                                 downloadPaths = WebDriverWait(self.driver, 120, 1).until(every_downloads_chrome)
                                 self.driver.close()
                                 self.driver.switch_to.window(window_name=self.driver.window_handles[0])
-                                downloadPath = str(downloadPaths[0]).removeprefix("file:///").replace("%20"," ")
+                                if sys.platform == "win32":
+                                    downloadPath = str(downloadPaths[0]).removeprefix("file:///").replace("%20"," ")
+                                elif sys.platform == "linux":
+                                    downloadPath = str(downloadPaths[0]).removeprefix("file://").replace("%20"," ")
                                 shutil.move(downloadPath, os.path.join(pagesPath,str((sorted([int(os.path.splitext(file)[0]) for file in os.listdir(pagesPath)], reverse=True)[0]+1 if os.listdir(pagesPath) else 1))+os.path.splitext(os.path.basename(downloadPath))[-1]))
                     elif current in i.get_attribute('class'):
                         print([j.get_attribute('class') for j in i.find_elements(By.XPATH, "./*")])
@@ -224,7 +227,8 @@ class myNelson:
                         clickLevel(currentLevel = i.find_elements(By.XPATH, "./*")[[j.get_attribute('class') for j in i.find_elements(By.XPATH, "./*")].index("ul" if "ul" in [j.get_attribute('class') for j in i.find_elements(By.XPATH, "./*")] else "ul backgroundNone")], level = level+1)
             clickLevel(currentLevel=contentLocation, level=1)
             self.quit()
-        except:
+        except Exception as err:
+            print(err)
             self.quit()
     
 # Program starts running
@@ -239,9 +243,9 @@ if __name__ == '__main__':
     # autoChromeDriver.autoInstall(browserPath = browserPath)
     #login
     form = myNelson(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath, browserDownloadPath=os.path.join(sys.path[0], "tmp"), logLevel = 3)
-    print(form.testLogin("user1"))
-    print(form.getTextbookList(name="user1"))
-    form.makeTextbookDirectorys(name="user1", textbooksNames=["all"])
-    # form.downloadTextbook(name="user1", textbookName="Chemistry 12U - Student Text PDF (Online)")
+    # print(form.testLogin("user1"))
+    # print(form.getTextbookList(name="user1"))
+    # form.makeTextbookDirectorys(name="user1", textbooksNames=["all"])
+    form.downloadTextbook(name="user1", textbookName="Chemistry 12U - Student Text PDF (Online)")
     # form.downloadTextbook(name="user1", textbookName="Physics 11U - Online Student Text PDF Files")
     pass
