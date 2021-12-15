@@ -8,6 +8,16 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 class webScraper:
+    """Recommended imports:\n
+    import selenium\n
+    from selenium import webdriver\n
+    from selenium.webdriver.common.action_chains import ActionChains\n
+    from selenium.webdriver.common.by import By\n
+    from selenium.webdriver.chrome.service import Service\n
+    from selenium.webdriver.common.desired_capabilities import DesiredCapabilities\n
+    from selenium.webdriver.support.ui import WebDriverWait\n
+    from selenium.webdriver.support import expected_conditions as EC\n
+    """
     def __init__(self, url, webDriverPath="./chromedriver", browser=None, browserDownloadPath = None, browserHide = False, logLevel: int = None):
         # sets up the variables for the webscraper class
         self.url = url
