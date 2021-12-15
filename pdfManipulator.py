@@ -1,4 +1,4 @@
-import pikepdf, os, sys, concurrent.futures
+import pikepdf, os, concurrent.futures
 
 def unlock(inputPdfPath: str, outputPdfPath: str = None, passwordList: list[str] = [""]):
     """Takes a input pdf file and a output pdf file if end location is different from the input location or if the name has changed\n
