@@ -1,6 +1,4 @@
-import time, json, os, sys, re, shutil, requests, webScraper
-from bs4 import BeautifulSoup, SoupStrainer
-from selenium.webdriver.common import by
+import time, json, os, sys, shutil, requests, webScraper
 from datetime import datetime
 from datetime import time as dttime
 
@@ -13,15 +11,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-configJson = "config.json"    
-
-valURL = re.compile( # regex to see if valid url
-    r'^(?:http|ftp)s?://' # http:// or https://
-    r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
-    r'localhost|' #localhost...
-    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
-    r'(?::\d+)?' # optional port
-    r'(?:/?|[/?]\S+)$', re.IGNORECASE)
+configJson = "config.json"
 
 class config():
     @staticmethod
@@ -58,6 +48,19 @@ class config():
                 confFile.write(json.dumps(data, indent=4))
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
+    @staticmethod
+    def userEdit(name: str, newEmail: str = None, newPassword: str = None, newName: str = None):
+        data: dict
+        with open(os.path.join(sys.path[0], configJson), "r") as confFile: # 
+            data = json.load(confFile)
+        if newEmail:
+            data["users"][name]["email"] = newEmail
+        if newPassword:
+            data["users"][name]["password"] = newEmail
+        if newName:
+            data["users"][newName] = data["users"].pop(name)
+        with open(os.path.join(sys.path[0],configJson), "w") as confFile:
+            confFile.write(json.dumps(data, indent=4))      
 
 class myNelson(webScraper.webScraper):
     def autoLogin(self, name, waitUrlChange:bool = True, waitTime: int = 10):
