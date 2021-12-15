@@ -9,7 +9,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 class webScraper:
     def __init__(self, url, webDriverPath="./chromedriver", browser=None, browserDownloadPath = None, browserHide = False, logLevel: int = None):
-        #Sets up the variables for the webscraper class
+        # sets up the variables for the webscraper class
         self.url = url
         self.webDriverPath = webDriverPath
         self.browser = browser
