@@ -1,9 +1,10 @@
-import time, json, os, sys, re, shutil, requests, selenium, autoChromeDriver
+import time, json, os, sys, re, shutil, requests, webScraper
 from bs4 import BeautifulSoup, SoupStrainer
 from selenium.webdriver.common import by
 from datetime import datetime
 from datetime import time as dttime
 
+import selenium, autoChromeDriver
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
@@ -58,59 +59,7 @@ class config():
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
 
-class myNelson:
-    def __init__(self, url, webDriverPath="./chromedriver", browser=None, browserDownloadPath = None, browserHide = False, logLevel: int = None):
-        #url of the page we want to run
-        self.url = url
-        self.webDriverPath = webDriverPath
-        self.browser = browser
-        self.browserDownloadPath = browserDownloadPath
-        self.browserHide = browserHide
-        self.logLevel = logLevel
-
-    def waitUrlChange(self, currentURL: str, waitTime: int = 10): # function to wait for next page to load before continuing 
-        try:
-            WebDriverWait(self.driver, waitTime).until(lambda driver: driver.current_url != currentURL)
-            return True
-        except selenium.common.exceptions.TimeoutException:
-            return False
-
-    def setup(self):
-        try:
-            # set up
-            caps = DesiredCapabilities().CHROME
-            # caps["pageLoadStrategy"] = "normal"  #  complete
-            # caps["pageLoadStrategy"] = "eager"  #  interactive
-            # caps["pageLoadStrategy"] = "none"   #  undefined
-
-            chromeOptions = webdriver.chrome.options.Options()
-            if self.browserHide == True: # hides web browser if true
-                chromeOptions.headless = True
-            try:
-                if self.browser != None: # uses chrome by default if put in another browser location trys to use that browser
-                    chromeOptions.binary_location = self.browser
-            except:
-                print("Browser in that location does not exist")
-            if self.browserDownloadPath != None:
-                chromeOptions.add_experimental_option("prefs", {
-                    "download.default_directory": self.browserDownloadPath,
-                    "download.prompt_for_download": False # ,
-                    # "download.directory_upgrade": True,
-                    # "safebrowsing.enabled": True
-                    })
-            if self.logLevel != None:
-                chromeOptions.add_argument("--log-level="+str(self.logLevel))
-            # initiating the webdriver. Parameter includes the path of the webdriver.
-            self.driver = webdriver.Chrome(desired_capabilities=caps, service=Service(self.webDriverPath), options=chromeOptions)
-            self.driver.get(self.url) # goes to starting url
-            # self.autoLogin()
-            # self.fillForm()
-        except Exception as err:
-            print("Driver has stopped working\nShutting down...\n", err) # if something fails in the process of logging in to class it shuts down
-
-    def quit(self):
-        self.driver.quit() # quits webdriver
-
+class myNelson(webScraper.webScraper):
     def autoLogin(self, name, waitUrlChange:bool = True, waitTime: int = 10):
         currentUrl = self.driver.current_url
         try:
@@ -243,9 +192,9 @@ if __name__ == '__main__':
     # autoChromeDriver.autoInstall(browserPath = browserPath)
     #login
     form = myNelson(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath, browserDownloadPath=os.path.join(sys.path[0], "tmp"), logLevel = 3)
-    # print(form.testLogin("user1"))
+    print(form.testLogin("user1"))
     # print(form.getTextbookList(name="user1"))
     # form.makeTextbookDirectorys(name="user1", textbooksNames=["all"])
-    form.downloadTextbook(name="user1", textbookName="Chemistry 12U - Student Text PDF (Online)")
+    # form.downloadTextbook(name="user1", textbookName="Chemistry 12U - Student Text PDF (Online)")
     # form.downloadTextbook(name="user1", textbookName="Physics 11U - Online Student Text PDF Files")
     pass
