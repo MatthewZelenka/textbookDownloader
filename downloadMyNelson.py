@@ -73,6 +73,7 @@ class config():
             data["users"][name]["password"] = newEmail
         if newName:
             data["users"][newName] = data["users"].pop(name)
+            os.rename(os.path.join(sys.path[0],"users",name), os.path.join(sys.path[0],"users", newName))
         with open(os.path.join(sys.path[0],config.configJson), "w") as confFile:
             confFile.write(json.dumps(data, indent=4))      
 
