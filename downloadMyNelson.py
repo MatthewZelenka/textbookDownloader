@@ -11,29 +11,43 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-configJson = "config.json"
-
 class config():
+    configJson = "config.json"
     @staticmethod
     def gen():
         baseConfig = {
             "browserPath":"",
             "users":{}
         }
-        with open(os.path.join(sys.path[0],configJson), "w") as confFile:
+        with open(os.path.join(sys.path[0],config.configJson), "w") as confFile:
             confFile.write(json.dumps(baseConfig, indent=4))
         os.makedirs(os.path.join(sys.path[0],"users"))
     @staticmethod
+    def editBrowserPath(browserPath: str):
+        data: dict
+        with open(os.path.join(sys.path[0],config.configJson), "r") as confFile: # 
+            data = json.load(confFile)
+        if os.path.isfile(browserPath):
+            data["browserPath"] = browserPath
+            with open(os.path.join(sys.path[0],config.configJson), "w") as confFile:
+                confFile.write(json.dumps(data, indent=4))
+        else:
+            raise Exception('Browser path is not a valid file path: ' + browserPath)
+    @staticmethod
+    def getBrowserPath():
+        with open(os.path.join(sys.path[0],config.configJson), "r") as confFile: # 
+            return str(json.load(confFile)["browserPath"])
+    @staticmethod
     def listUsers():
-        with open(os.path.join(sys.path[0], configJson), "r") as confFile: # 
+        with open(os.path.join(sys.path[0],config.configJson), "r") as confFile: # 
             return list(json.load(confFile)["Users"].keys())
     @staticmethod
     def userAdd(username: str, password: str, name: str = None):
         data: dict
-        with open(os.path.join(sys.path[0], configJson), "r") as confFile: # 
+        with open(os.path.join(sys.path[0],config.configJson), "r") as confFile: # 
             data = json.load(confFile)
         data["users"].update({(username if name == None else name):{"email": username, "password": password}})
-        with open(os.path.join(sys.path[0],configJson), "w") as confFile:
+        with open(os.path.join(sys.path[0],config.configJson), "w") as confFile:
             confFile.write(json.dumps(data, indent=4))
         os.makedirs(os.path.join(sys.path[0],"users",(username if name == None else name)))
     @staticmethod
@@ -41,17 +55,17 @@ class config():
         try:
             shutil.rmtree(os.path.join(sys.path[0],"users",name))
             data: dict
-            with open(os.path.join(sys.path[0], configJson), "r") as confFile: # 
+            with open(os.path.join(sys.path[0],config.configJson), "r") as confFile: # 
                 data = json.load(confFile)
             data["users"].pop(name)
-            with open(os.path.join(sys.path[0],configJson), "w") as confFile:
+            with open(os.path.join(sys.path[0],config.configJson), "w") as confFile:
                 confFile.write(json.dumps(data, indent=4))
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
     @staticmethod
     def userEdit(name: str, newEmail: str = None, newPassword: str = None, newName: str = None):
         data: dict
-        with open(os.path.join(sys.path[0], configJson), "r") as confFile: # 
+        with open(os.path.join(sys.path[0],config.configJson), "r") as confFile: # 
             data = json.load(confFile)
         if newEmail:
             data["users"][name]["email"] = newEmail
@@ -59,7 +73,7 @@ class config():
             data["users"][name]["password"] = newEmail
         if newName:
             data["users"][newName] = data["users"].pop(name)
-        with open(os.path.join(sys.path[0],configJson), "w") as confFile:
+        with open(os.path.join(sys.path[0],config.configJson), "w") as confFile:
             confFile.write(json.dumps(data, indent=4))      
 
 class myNelson(webScraper.webScraper):
@@ -68,8 +82,8 @@ class myNelson(webScraper.webScraper):
         try:
             if currentUrl.find("https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html") != -1: # logs you in to google in order to access the link provided 
                 print("Logging in to mynelson...")
-                WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable((By.ID, "txt-clear")))
-                with open(os.path.join(sys.path[0], configJson), "r") as read_file: # puts email in to google login from configJson
+                WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable((By.ID, "txt-clear")))
+                with open(os.path.join(sys.path[0], config.configJson), "r") as read_file: # puts email in to google login from configJson
                     data = json.load(read_file)
                     # Clicks and inputs username
                     self.driver.find_element(By.ID, "txt-clear").click()
@@ -81,18 +95,22 @@ class myNelson(webScraper.webScraper):
                     self.driver.find_element(By.ID, "btnLogin").click()
                 if waitUrlChange == True: self.waitUrlChange(currentURL=currentUrl, waitTime=waitTime)
             pass
-        except:
+        except Exception as err:
+            print(err)
             self.quit()
 
-    def testLogin(self, name):
-        self.setup()
-        currentUrl = self.driver.current_url
-        self.autoLogin(name=name, waitUrlChange=True, waitTime=2)
-        result = False if currentUrl == self.driver.current_url else True
-        self.quit()
-        return result
+    def verifyLogin(self, name): # Logs in and checks to see if it changes urls to see if log in succsesful
+        try:
+            self.setup()
+            currentUrl = self.driver.current_url
+            self.autoLogin(name=name, waitUrlChange=True, waitTime=2)
+            result = False if currentUrl == self.driver.current_url else True
+            self.quit()
+            return result
+        except Exception as err:
+            print(err)
     
-    def getTextbookList(self, name: str):
+    def getTextbookList(self, name: str): # logs in and scans for all textbooks on your page
         self.setup()
         self.autoLogin(name=name)
         try:
@@ -100,10 +118,11 @@ class myNelson(webScraper.webScraper):
             textbooks = [str(textbook.text).removeprefix("Loading...\n").replace("\n", " - ") for textbook in self.driver.find_elements(By.CLASS_NAME, "productMain")]
             self.quit()
             return textbooks
-        except:
+        except Exception as err:
+            print(err)
             self.quit()
     
-    def makeTextbookDirectorys(self, name: str, textbooksNames: list = ["all"]):
+    def makeTextbookDirectorys(self, name: str, textbooksNames: list = ["all"]): # makes directorys for all specifed textbooks by default all of them
         self.setup()
         self.autoLogin(name=name)
         try:
@@ -120,41 +139,56 @@ class myNelson(webScraper.webScraper):
                         cover.write(r.content)
                         cover.close()
             self.quit()
-        except:
+            return True
+        except Exception as err:
+            print(err)
             self.quit()
+            return False
 
     def downloadTextbook(self, name: str, textbookName: str):
+        # sets up directorys
+        downloadDir = ["tmp","locked-DOWNLOADING"]
+        timeStarted = datetime.now().strftime("%d-%m-%Y_%Hh-%Mm-%Ss")
+        pagesPath = os.path.join(sys.path[0],"users",name,textbookName,timeStarted)
+        for dir in downloadDir:
+            os.makedirs(os.path.join(pagesPath,dir))
+        # creates file path for the end destination of the downloaded files
+        self.browserDownloadPath = os.path.join(sys.path[0],"users",name,textbookName,timeStarted,downloadDir[0])
+        
+        # logs in to site
         self.setup()
         self.autoLogin(name=name)
         try:
+            # logs in to page and waits for textbook elements to load in
             WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "productMain")))
             textbooks = self.driver.find_elements(By.CLASS_NAME, "productMain")
             textbook = textbooks[[str(textbook.text).removeprefix("Loading...\n").replace("\n", " - ") for textbook in textbooks].index(textbookName)]
-            pagesPath = os.path.join(sys.path[0],"users",name,str(textbook.text).removeprefix("Loading...\n").replace("\n", " - "),datetime.now().strftime("%d-%m-%Y_%Hh-%Mm-%Ss"),"tmp")
-            print(pagesPath)
-            os.makedirs(pagesPath)
+            # waits for table of contents for the textbook to show up
             self.driver.get(textbook.find_element(By.CSS_SELECTOR, "a[title=\""+textbookName+"\"]").get_attribute('href'))
             WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "jspPane")))
             contentLocation = self.driver.find_elements(By.CLASS_NAME, "jspPane")[[i.find_element(By.XPATH, "./*").get_attribute('class') for i in self.driver.find_elements(By.CLASS_NAME, "jspPane")].index("ul accordion")].find_element(By.XPATH, "./*")  
+            # goes throught all of the levels of the textbook and downloads all of the pdfs
             def clickLevel(currentLevel, level: int):
                 current = "depth"+str(level)
                 print(current)
                 sections = currentLevel.find_elements(By.XPATH, "./*")
                 for i in sections:
+                    # scrolls to the element it wants to click on as the site won't let you expand the table unless it is visible
                     actions = ActionChains(self.driver)
                     actions.move_to_element(i).perform()
-                    if "content" == i.get_attribute('class'):
+                    if "content" == i.get_attribute('class'): # if the item it clicks on is classified as content then attempts to download
                         i.click()
-                        print("Found content")
                         WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, "linkRowContainer")))
                         links = self.driver.find_elements(By.CLASS_NAME, "linkRowContainer")
                         for link in links:
                             if "PDF" in link.find_element(By.XPATH, "./*").get_attribute('class'):
+                                # gets link to download the pdf 
                                 PDFDownload = link.find_element(By.CLASS_NAME, "link_NotDownloadable").get_attribute('openlink')
-                                print(PDFDownload)
+                                # opens link to download pdf
                                 self.driver.execute_script("window.open('about:blank', 'secondtab');")
                                 self.driver.switch_to.window(window_name=self.driver.window_handles[1])
                                 self.driver.get(PDFDownload)
+                                # waits for the item downloading to be downloaded by checking the output folder for tmp and crdownload files
                                 def every_downloads_chrome(driver):
                                     if not driver.current_url.startswith("chrome://downloads"):
                                         driver.get("chrome://downloads/")
@@ -165,13 +199,22 @@ class myNelson(webScraper.webScraper):
                                             return items.map(e => e.fileUrl || e.file_url);
                                         """)
                                 downloadPaths = WebDriverWait(self.driver, 120, 1).until(every_downloads_chrome)
+                                # runs throught all the downloads even the  ones that were already downloaded as that is how chrome responds to see if they exist and if so move and change the name to a numarical value for ordering when merging later
+                                listOfFilesInDownloadDir = os.listdir(os.path.join(pagesPath,downloadDir[1]))
+                                for downloadPath in downloadPaths:
+                                    downloadPath = downloadPath.replace("%20"," ")
+                                    while os.path.isfile(downloadPath) == False and downloadPath != "":
+                                        downloadPath = downloadPath[1:]
+                                    if downloadPath == "":
+                                        continue
+                                    transferPath = os.path.join(
+                                            pagesPath,
+                                            downloadDir[1],
+                                            str((sorted([int(os.path.splitext(file)[0]) for file in listOfFilesInDownloadDir], reverse=True)[0]+1 if listOfFilesInDownloadDir else 1))+os.path.splitext(os.path.basename(downloadPath))[-1])
+                                    shutil.move(downloadPath, transferPath)
+                                # self.browserDownloadPath
                                 self.driver.close()
                                 self.driver.switch_to.window(window_name=self.driver.window_handles[0])
-                                if sys.platform == "win32":
-                                    downloadPath = str(downloadPaths[0]).removeprefix("file:///").replace("%20"," ")
-                                elif sys.platform == "linux":
-                                    downloadPath = str(downloadPaths[0]).removeprefix("file://").replace("%20"," ")
-                                shutil.move(downloadPath, os.path.join(pagesPath,str((sorted([int(os.path.splitext(file)[0]) for file in os.listdir(pagesPath)], reverse=True)[0]+1 if os.listdir(pagesPath) else 1))+os.path.splitext(os.path.basename(downloadPath))[-1]))
                     elif current in i.get_attribute('class'):
                         print([j.get_attribute('class') for j in i.find_elements(By.XPATH, "./*")])
                         i.click()
@@ -179,25 +222,24 @@ class myNelson(webScraper.webScraper):
                         clickLevel(currentLevel = i.find_elements(By.XPATH, "./*")[[j.get_attribute('class') for j in i.find_elements(By.XPATH, "./*")].index("ul" if "ul" in [j.get_attribute('class') for j in i.find_elements(By.XPATH, "./*")] else "ul backgroundNone")], level = level+1)
             clickLevel(currentLevel=contentLocation, level=1)
             self.quit()
+            os.rename(os.path.join(sys.path[0],"users",name,textbookName,timeStarted,downloadDir[1]), os.path.join(sys.path[0],"users",name,textbookName,timeStarted,downloadDir[1].removesuffix("-DOWNLOADING")))
+            return True
         except Exception as err:
             print(err)
             self.quit()
+            return False
     
 # Program starts running
 if __name__ == '__main__':
-    browserPath = ""
-    with open(os.path.join(sys.path[0], configJson), "r") as read_file:
-        data = json.load(read_file)
-        if os.path.isfile(data["browserPath"]):
-            browserPath = data["browserPath"]
+    browserPath = config.getBrowserPath()
     # config.gen()
     # config.userDelete(name="a")
     # autoChromeDriver.autoInstall(browserPath = browserPath)
     #login
-    form = myNelson(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath, browserDownloadPath=os.path.join(sys.path[0], "tmp"), logLevel = 3)
-    print(form.testLogin("user1"))
+    form = myNelson(url = "https://www.mynelson.com/mynelson/staticcontent/html/PublicLogin.html", browserHide = False, browser = browserPath, logLevel = 3)
+    # print(form.verifyLogin("user1"))
     # print(form.getTextbookList(name="user1"))
     # form.makeTextbookDirectorys(name="user1", textbooksNames=["all"])
-    # form.downloadTextbook(name="user1", textbookName="Chemistry 12U - Student Text PDF (Online)")
+    form.downloadTextbook(name="user1", textbookName="Chemistry 12U - Student Text PDF (Online)")
     # form.downloadTextbook(name="user1", textbookName="Physics 11U - Online Student Text PDF Files")
     pass

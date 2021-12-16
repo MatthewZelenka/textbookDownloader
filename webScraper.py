@@ -1,4 +1,4 @@
-import selenium
+import selenium, importlib
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
@@ -62,6 +62,11 @@ class webScraper:
             # initiating the webdriver. Parameter includes the path of the webdriver.
             self.driver = webdriver.Chrome(desired_capabilities=caps, service=Service(self.webDriverPath), options=chromeOptions)
             self.driver.get(self.url) # goes to starting url
+        except selenium.common.exceptions.WebDriverException:
+            if importlib.util.find_spec("autoChromeDriver") is not None:
+                import autoChromeDriver
+                self.webDriverPath = autoChromeDriver.autoInstall(browserPath=self.browser)
+                self.setup()
         except Exception as err:
             print("Driver initiation has stopped working\nShutting down...\n", err) # if something fails in the initiation process it shuts down
 
