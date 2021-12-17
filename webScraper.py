@@ -18,13 +18,14 @@ class webScraper:
     from selenium.webdriver.support.ui import WebDriverWait\n
     from selenium.webdriver.support import expected_conditions as EC\n
     """
-    def __init__(self, url, webDriverPath="./chromedriver", browser=None, browserDownloadPath = None, browserHide = False, logLevel: int = None):
+    def __init__(self, url:str = None, webDriverPath:str = "./chromedriver", browser:str = None, browserDownloadPath:str = None, browserHide:str = False, userAgent:str = None, logLevel: int = None):
         # sets up the variables for the webscraper class
         self.url = url
         self.webDriverPath = webDriverPath
         self.browser = browser
         self.browserDownloadPath = browserDownloadPath
         self.browserHide = browserHide
+        self.userAgent = userAgent
         self.logLevel = logLevel
 
     def waitUrlChange(self, currentURL: str, waitTime: int = 10): # function to wait for next page to load before continuing 
@@ -46,7 +47,7 @@ class webScraper:
             if self.browserHide == True: # hides web browser if true
                 chromeOptions.headless = True
             try:
-                if self.browser != None: # uses chrome by default if put in another browser location trys to use that browser
+                if self.browser: # uses chrome by default if put in another browser location trys to use that browser
                     chromeOptions.binary_location = self.browser
             except:
                 print("Browser in that location does not exist")
@@ -59,9 +60,12 @@ class webScraper:
                     })
             if self.logLevel != None:
                 chromeOptions.add_argument("--log-level="+str(self.logLevel))
+            if self.userAgent != None:
+                chromeOptions.add_argument("user-agent="+self.userAgent)
             # initiating the webdriver. Parameter includes the path of the webdriver.
             self.driver = webdriver.Chrome(desired_capabilities=caps, service=Service(self.webDriverPath), options=chromeOptions)
-            self.driver.get(self.url) # goes to starting url
+            if self.url:
+                self.driver.get(self.url) # goes to starting url
         except selenium.common.exceptions.WebDriverException:
             if importlib.util.find_spec("autoChromeDriver") is not None:
                 import autoChromeDriver
