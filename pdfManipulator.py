@@ -9,8 +9,7 @@ def unlock(inputPdfPath: str, outputPdfPath: str = None, passwordList: list[str]
         unlock(inputPdfPath=pdfIn, outputPdfPath=pdfOut, passwordList=passwordList)\n"""
     # check to see if input pathfile is correct
     if os.path.isfile(inputPdfPath) == False:
-        print("Input filepath  does not exist: "+inputPdfPath)
-        raise
+        raise Exception("Input filepath  does not exist: "+inputPdfPath)
     for password in passwordList:
         try:
             # open pdf file and check each password to see if it correct
@@ -43,7 +42,7 @@ def mergePdfs(inputPdfPaths: str, outputPdfFilepath: str):
     Usage example:\n
         pdfsIn = ["pdf1.pdf", "pdf2.pdf"]\n
         pdfout = "ComboPdf.pdf"\n
-        mergePdfs(inputPdfPaths = pdfsIn, outputPdfFilepath = pdfout)\n"""
+        mergePdfs(inputPdfPaths = pdfsIn, outputPdfFilepath = pdfOut)\n"""
     mergePdf = pikepdf.Pdf.new()
     for pdfPath in inputPdfPaths:
         pdfPart = pikepdf.Pdf.open(pdfPath)
