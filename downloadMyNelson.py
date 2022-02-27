@@ -1,4 +1,4 @@
-import time, json, os, sys, shutil, requests, webScraper
+import time, json, os, sys, shutil, requests, webScraper, pdfManipulator
 from datetime import datetime
 from datetime import time as dttime
 
@@ -40,7 +40,7 @@ class config():
     @staticmethod
     def listUsers():
         with open(os.path.join(sys.path[0],config.configJson), "r") as confFile: # 
-            return list(json.load(confFile)["Users"].keys())
+            return list(json.load(confFile)["users"].keys())
     @staticmethod
     def userAdd(username: str, password: str, name: str = None):
         data: dict
@@ -76,6 +76,53 @@ class config():
             os.rename(os.path.join(sys.path[0],"users",name), os.path.join(sys.path[0],"users", newName))
         with open(os.path.join(sys.path[0],config.configJson), "w") as confFile:
             confFile.write(json.dumps(data, indent=4))      
+
+class fileManager():
+    @staticmethod
+    def listUserFolders():
+        path = os.path.join(sys.path[0],"users")
+        return [dir for dir in os.listdir(path) if os.path.isdir(os.join(path, dir))]
+    @staticmethod
+    def listUserTextbooks(user: str):
+        path = os.path.join(sys.path[0],"users", user)
+        return [dir for dir in os.listdir(path) if os.path.isdir(os.path.join(path, dir))]
+    @staticmethod
+    def listDownloadDates(user: str, textbook: str):
+        path = os.path.join(sys.path[0],"users", user, textbook)
+        return [dir for dir in os.listdir(path) if os.path.isdir(os.path.join(path, dir))]
+    @staticmethod
+    def unlockTextbook(user: str, textbook: str, date: str):
+        try:
+            path = os.path.join(sys.path[0],"users", user, textbook, date)
+            try:
+                os.makedirs(os.path.join(path, "unlocked"))
+            except:
+                pass
+            pdfManipulator.multiUnlock(inputPdfPaths=[os.path.join(path,"locked",pdf) for pdf in os.listdir(os.path.join(path,"locked"))], outputPdfPath=os.path.join(path, "unlocked"))
+            return True
+        except:
+            return False
+    @staticmethod
+    def mergeTextbook(user: str, textbook: str, date: str):
+        # try:
+        path = os.path.join(sys.path[0],"users", user, textbook, date) # os.path.join(path, "unlocked")
+        print([os.path.join(path, "unlocked", file) for file in sorted(os.listdir(os.path.join(path, "unlocked")), key=lambda x: int(os.path.splitext(x)[0]))])
+        pdfManipulator.mergePdfs(
+            inputPdfPaths = [os.path.join(path, "unlocked", file) for file in sorted(os.listdir(os.path.join(path, "unlocked")), key=lambda x: int(os.path.splitext(x)[0]))],
+            outputPdfFilepath = os.path.join(sys.path[0],"users", user, textbook, date, textbook+".pdf")
+        )
+        return True
+        # except:
+        #     return False
+    @staticmethod
+    def openTextbook(user: str, textbook: str, date: str):
+        path = os.path.join(sys.path[0],"users", user, textbook, date, textbook+".pdf")
+        try:
+            os.startfile(path)
+            return True
+        except:
+            pass
+
 
 class myNelson(webScraper.webScraper):
     def autoLogin(self, name, waitUrlChange:bool = True, waitTime: int = 10):
@@ -241,6 +288,8 @@ if __name__ == '__main__':
     # print(form.verifyLogin("user1"))
     # print(form.getTextbookList(name="user1"))
     # form.makeTextbookDirectorys(name="user1", textbooksNames=["all"])
-    form.downloadTextbook(name="user1", textbookName="Chemistry 12U - Student Text PDF (Online)")
+    # form.downloadTextbook(name="user1", textbookName="Chemistry 12U - Student Text PDF (Online)")
     # form.downloadTextbook(name="user1", textbookName="Physics 11U - Online Student Text PDF Files")
+    print(fileManager.listDownloadDates(user="Matthew Zelenka", textbook="Chemistry 12U - Student Text PDF (Online)"))
+    fileManager.openTextbook(user="Matthew Zelenka", textbook="Chemistry 12U - Student Text PDF (Online)", date="16-12-2021_00h-16m-23s")
     pass
